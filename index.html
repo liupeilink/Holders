@@ -38,7 +38,7 @@
 	<hr>
 	<label for="updateAsset">更新最新总资产</label><input id="updateAsset" v-model="tempAsset" type="text" placeholder="input current asset..."><button @click="update()">更新</button><br><hr>
 	<span>asset:{{ asset }} inputing:{{ tempAsset }}</span><br><hr>
-	<p id="copyright">&copy;2016 <a href="http://github.com/liupeilink" target="_blank">lpl</a> version 1.0</p>
+	<p id="copyright">&copy;2016 <a href="https://github.com/liupeilink" target="_blank">lpl</a> version 1.0</p>
 	<div id="modal" v-show="actShow">
 		<span>操作类型：</span><span>{{ act }}</span><br>
 		<label for="">金额</label><input id="f-focus" v-model="actNum" type="text" ><button @click="confirm()">确认</button> <button @click="cancel()">取消</button>
