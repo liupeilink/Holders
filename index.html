@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>比例分配</title>
+	<style>
+		#modal {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 400px;
+			height: 200px;
+			transform: translate(-200px, -100px);
+			background-color: #ccc;
+		}
+		#copyright {
+			font:10px/10px Microsoft Yahei,serif;
+		}
+	</style>
+	<!-- <link href="http://cdn.bootcss.com/bootstrap/3.0.2/css/bootstrap-theme.min.css" rel="stylesheet"> -->
+</head>
+<body>
+<div id="app">
+	<label for="addHolder">add user</label><input id="addHolder" v-model="newUserName" type="text" placeholder="input username..."><button @click="add">添加</button><br><hr>
+	<table>
+		<thead>
+			<tr>
+				<td>name</td><td>当前资产</td><td>比例</td><td>操作</td>
+			</tr>
+		</thead>
+		<tr v-for="(index, item) in holder">
+			<td>{{ item.name }}</td>
+			<td>{{ parseFloat(item.curMoney).toFixed(2) }}</td>
+			<td>{{ percent(item.curMoney) }}%</td>
+			<td><button @click="turnIn(item)">转入</button> <button @click="turnOut(item)">转出</button> <button @click="delete(index)">delete</button></td>
+		</tr>
+	</table>
+	<hr>
+	<label for="updateAsset">更新最新总资产</label><input id="updateAsset" v-model="tempAsset" type="text" placeholder="input current asset..."><button @click="update()">更新</button><br><hr>
+	<span>asset:{{ asset }} inputing:{{ tempAsset }}</span><br><hr>
+	<p id="copyright">&copy;2016 <a href="http://github.com/liupeilink" target="_blank">lpl</a> version 1.0</p>
+	<div id="modal" v-show="actShow">
+		<span>操作类型：</span><span>{{ act }}</span><br>
+		<label for="">金额</label><input id="f-focus" v-model="actNum" type="text" ><button @click="confirm()">确认</button> <button @click="cancel()">取消</button>
+	</div>
+</div>
+	<!-- <script src="http://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script> -->
+	<!-- <script src="https://cdn.bootcss.com/vue/1.0.7/vue.min.js"></script> -->
+	<script src="./lib/vue1.07.min.js"></script>
+	<script>
+		var oFocus = document.getElementById("f-focus")
+		var vm = new Vue({
+			el: "#app",
+			data: {
+				holder: [
+					{
+						name: "lpl",
+						curMoney: 0
+					}
+				],			
+				tempAsset: 0,
+				asset: 0,
+				//操作类型（转入/转出）
+				act: "",
+				//操作金额
+				actNum: '',
+				//操作框显示
+				actShow: false,
+				//新客户名称
+				newUserName: '',
+				//当前操作客户
+				currentUser: {}
+				
+			},
+			computed: {
+				computedAsset: function(){
+					var $this = this
+					return $this.asset
+				}
+			},
+			methods: {
+				getFromStore: function(val){
+					if(localStorage){
+						if(localStorage.getItem(val)){
+							return JSON.parse(localStorage.getItem(val))
+						}
+					}
+				},
+				setStoreData: function(val,val_val){
+					if(localStorage){
+						localStorage[val] = val_val
+					}
+				},
+				add: function(){
+					var $this = this
+					if($this.newUserName == ''){
+						alert("姓名不能为空！");
+						return;
+					}
+					var holder = $this.getFromStore("holder");
+					console.log(holder)
+					var user = {
+						name: $this.newUserName,
+						curMoney: 0
+					}
+					$this.holder.push(user)
+					holder.push(user);
+					var holderStr = JSON.stringify(holder)
+					if(localStorage){
+						localStorage["holder"] = holderStr
+					}
+				},
+				update: function(){
+					console.log("update")
+					console.log(this.asset)
+					var $this = this
+					var sum = 0
+					for(var i=0; i<$this.holder.length; i++){
+						sum += parseFloat($this.holder[i].curMoney)
+					}
+					console.log(sum)
+					if(sum <= 0){
+						alert("账户资产为0，不能更新")
+						return;
+					}
+					if(!parseFloat($this.tempAsset)){
+						alert("请输入正确的金额！")
+						$this.tempAsset = ""
+						return;
+					}
+					var percent = [];
+					for(var i=0; i<$this.holder.length; i++){
+						
+						percent[i] = $this.percent($this.holder[i].curMoney)/100
+						$this.holder[i].curMoney = parseFloat($this.tempAsset) * percent[i]  
+					}
+					$this.asset = parseFloat($this.tempAsset)
+
+					var holderStr = JSON.stringify($this.holder)
+					$this.setStoreData("holder", holderStr)
+					$this.setStoreData("asset",$this.asset)
+
+				},
+				percent: function(curMoney){
+					var $this = this;
+					if($this.asset === 0){
+						return "--"
+					}else{
+						return (curMoney*100/$this.asset).toFixed(2)
+					}
+				},
+				turnIn: function(item){
+					var $this = this
+					$this.act = "转入"
+					$this.actShow = true
+					$this.currentUser = item
+					
+					setTimeout(function(){oFocus.focus()},0)
+
+				},
+				turnOut: function(item){
+					var $this = this;
+					$this.act = "转出"
+					$this.actShow = true;
+					$this.currentUser = item
+
+					setTimeout(function(){oFocus.focus()},0)
+
+				},
+				confirm: function(){
+					var $this = this
+					if(!parseFloat($this.actNum)){
+						alert("请输入正确的金额")
+						$this.actNum = ''
+						return;
+					}
+					if($this.act == "转入"){
+						$this.currentUser.curMoney = (parseFloat($this.currentUser.curMoney) + parseFloat($this.actNum)).toFixed(2)
+						$this.asset = (parseFloat($this.asset) + parseFloat($this.actNum)).toFixed(2)
+					}else{
+						if(parseFloat($this.actNum)>$this.currentUser.curMoney){
+							alert("金额不足")
+							$this.actNum = ''
+							return;
+						}
+						$this.currentUser.curMoney = (parseFloat($this.currentUser.curMoney) - parseFloat($this.actNum)).toFixed(2)
+						$this.asset = (parseFloat($this.asset) - parseFloat($this.actNum)).toFixed(2)
+					}
+
+					var holderStr = JSON.stringify($this.holder)
+					$this.setStoreData("holder", holderStr)
+					$this.setStoreData("asset",$this.asset)
+
+					$this.actShow = false
+					$this.act = ""
+					$this.actNum = ""
+
+				},
+				delete: function(index){
+					var $this = this
+					$this.actShow = false;
+					$this.asset = (parseFloat($this.asset) - parseFloat($this.holder[index].curMoney)).toFixed(2)
+					$this.holder.splice(index,1)
+
+					//更新本地存储
+					var holderStr = JSON.stringify($this.holder)
+					$this.setStoreData("holder", holderStr)
+					$this.setStoreData("asset",$this.asset)
+				},
+				cancel: function(){
+					var $this = this
+					$this.actShow = false;
+				}
+			},
+			created: function(){
+				var $this = this
+				if(!window.localStorage){
+					alert("所用浏览器不支持localstorage，请更换浏览器");
+					return;
+				}
+				if(!localStorage.getItem("asset")){
+					localStorage["asset"] = $this.asset
+				}else{
+					$this.asset = $this.getFromStore("asset");
+				}
+				if(!localStorage.getItem("holder")){
+					var holderStr = JSON.stringify($this.holder)
+					localStorage["holder"] = holderStr
+				}else{
+					$this.holder = $this.getFromStore("holder")
+				}
+			}
+		});	
+	</script>
+</body>
+</html>
