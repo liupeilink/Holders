@@ -16,13 +16,24 @@
 		#copyright {
 			font:10px/10px Microsoft Yahei,serif;
 		}
+		#tab1 {
+			border: 1px solid #ccc;
+			text-align: center;
+		}
+		#tab1 td {
+			width: 150px;
+			border: 1px solid #ccc;
+		}
+		#tab1 .tab-muti {
+			width: 200px;
+		}
 	</style>
 	<!-- <link href="http://cdn.bootcss.com/bootstrap/3.0.2/css/bootstrap-theme.min.css" rel="stylesheet"> -->
 </head>
 <body>
 <div id="app">
 	<label for="addHolder">add user</label><input id="addHolder" v-model="newUserName" type="text" placeholder="input username..."><button @click="add">添加</button><br><hr>
-	<table>
+	<table id="tab1">
 		<thead>
 			<tr>
 				<td>name</td><td>当前资产</td><td>比例</td><td>操作</td>
@@ -32,7 +43,7 @@
 			<td>{{ item.name }}</td>
 			<td>{{ parseFloat(item.curMoney).toFixed(2) }}</td>
 			<td>{{ percent(item.curMoney) }}%</td>
-			<td><button @click="turnIn(item)">转入</button> <button @click="turnOut(item)">转出</button> <button @click="delete(index)">delete</button></td>
+			<td class="tab-muti"><button @click="turnIn(item)">转入</button> <button @click="turnOut(item)">转出</button> <button @click="delete(index)">delete</button></td>
 		</tr>
 	</table>
 	<hr>
@@ -146,7 +157,7 @@
 					if($this.asset === 0){
 						return "--"
 					}else{
-						return (curMoney*100/$this.asset).toFixed(2)
+						return (curMoney*100/$this.asset).toFixed(6)
 					}
 				},
 				turnIn: function(item){
